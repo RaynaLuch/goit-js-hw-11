@@ -12,6 +12,10 @@ const searchForm = document.querySelector('form.search-form');
 const myList = document.querySelector('div.gallery');
 const buttonLoadMore = document.querySelector('div.load-wrapper');
 buttonLoadMore.setAttribute('hidden', true);
+const lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: '250',
+});
 
 function loadPics(page = 1) {
   const searchQuery = searchForm.elements.searchQuery.value;
@@ -72,11 +76,18 @@ function loadPics(page = 1) {
     }
     myList.insertAdjacentHTML('beforeend', markup);
 
-    const lightbox = new SimpleLightbox('.gallery a', {
-      captionsData: 'alt',
-      captionDelay: '250',
-    });
     lightbox.refresh();
+
+    if (page > 1) {
+      const { height: cardHeight } = document
+        .querySelector('.gallery')
+        .firstElementChild.getBoundingClientRect();
+
+      window.scrollBy({
+        top: cardHeight * 1.5,
+        behavior: 'smooth',
+      });
+    }
     return;
   });
 }

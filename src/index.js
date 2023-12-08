@@ -17,26 +17,34 @@ const lightbox = new SimpleLightbox('.gallery a', {
   captionDelay: '250',
 });
 
-function loadPics(page = 1) {
+async function loadPics(page = 1) {
   const searchQuery = searchForm.elements.searchQuery.value;
-  axios(BASE_URL, {
-    params: {
-      key: API_KEY,
-      q: searchQuery,
-      image_type: 'photo',
-      orientation: 'horizontal',
-      safesearch: 'true',
-      page: page,
-      per_page: 40,
-    },
-  }).then(response => {
-    console.log(response);
+  let response;
+  try {
+    response = await axios(BASE_URL, {
+      params: {
+        key: API_KEY,
+        q: searchQuery,
+        image_type: 'photo',
+        orientation: 'horizontal',
+        safesearch: 'true',
+        page: page,
+        per_page: 40,
+      },
+    });
+  } catch (error) {
+    Notiflix.Notify.failure(`Error ${error}`);
+    return;
+  }
 
-    const markup = response.data.hits
-      .map(
-        hit =>
-          // `<li class="gallery__item"><a class="gallery__link" href=${hit.largeImageURL} ><img class="gallery__image" src = ${hit.previewURL} alt = ${hit.tags} /> </a></li>`
-          `<div class="photo-card">
+  //.then(response => {
+  console.log(response);
+
+  const markup = response.data.hits
+    .map(
+      hit =>
+        // `<li class="gallery__item"><a class="gallery__link" href=${hit.largeImageURL} ><img class="gallery__image" src = ${hit.previewURL} alt = ${hit.tags} /> </a></li>`
+        `<div class="photo-card">
             <a class="gallery__link" href=${hit.largeImageURL} ><img class="gallery__image" src=${hit.previewURL} alt=${hit.tags} loading="lazy" /></a>
             <div class="info">
               <p class="info-item">
@@ -53,43 +61,43 @@ function loadPics(page = 1) {
               </p>
             </div>
           </div>`
-      )
-      .join('');
-    buttonLoadMore.removeAttribute('hidden', true);
-    if (response.data.totalHits === 0) {
-      buttonLoadMore.setAttribute('hidden', true);
-      Notiflix.Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-    } else {
-      if (page === 1) {
-        Notiflix.Notify.success(
-          `Hooray! We found ${response.data.totalHits} images.`
-        );
-      }
-    }
-    if ((response.data.totalHits <= page * 40) & (page !== 1)) {
-      buttonLoadMore.setAttribute('hidden', true);
-      Notiflix.Notify.info(
-        "We're sorry, but you've reached the end of search results."
+    )
+    .join('');
+  buttonLoadMore.removeAttribute('hidden', true);
+  if (response.data.totalHits === 0) {
+    buttonLoadMore.setAttribute('hidden', true);
+    Notiflix.Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  } else {
+    if (page === 1) {
+      Notiflix.Notify.success(
+        `Hooray! We found ${response.data.totalHits} images.`
       );
     }
-    myList.insertAdjacentHTML('beforeend', markup);
+  }
+  if ((response.data.totalHits <= page * 40) & (page !== 1)) {
+    buttonLoadMore.setAttribute('hidden', true);
+    Notiflix.Notify.info(
+      "We're sorry, but you've reached the end of search results."
+    );
+  }
+  myList.insertAdjacentHTML('beforeend', markup);
 
-    lightbox.refresh();
+  lightbox.refresh();
 
-    if (page > 1) {
-      const { height: cardHeight } = document
-        .querySelector('.gallery')
-        .firstElementChild.getBoundingClientRect();
+  if (page > 1) {
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
 
-      window.scrollBy({
-        top: cardHeight * 1.5,
-        behavior: 'smooth',
-      });
-    }
-    return;
-  });
+    window.scrollBy({
+      top: cardHeight * 1.5,
+      behavior: 'smooth',
+    });
+  }
+  return;
+  //});
 }
 
 searchForm.addEventListener('submit', event => {
